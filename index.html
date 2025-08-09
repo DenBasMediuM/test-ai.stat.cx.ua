@@ -1,0 +1,82 @@
+<?php
+// index.php — форма с отправкой вопроса в n8n и выводом ответа
+?>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вопрос ИИ через n8n</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-size: 16px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #answer {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="answer">Напиши название проекта</div>
+    <form id="aiForm">
+        <textarea name="question" placeholder="Введите ваш вопрос..."></textarea>
+        <br>
+        <button type="submit">Отправить</button>
+    </form>
+
+<script>
+document.getElementById('aiForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const question = e.target.question.value;
+    const answerDiv = document.getElementById('answer');
+    answerDiv.innerHTML = "Обработка запроса...";
+
+    try {
+        const response = await fetch("https://itsa777.app.n8n.cloud/webhook/5e1d9bad-433a-43b7-a406-1295aff6c7f0", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ question: question })
+        });
+
+        if (!response.ok) {
+            answerDiv.innerHTML = "Ошибка запроса: " + response.status;
+            return;
+        }
+
+        const result = await response.json();
+        answerDiv.innerHTML = result.output ? result.output : JSON.stringify(result);
+
+    } catch (err) {
+        answerDiv.innerHTML = "Ошибка: " + err.message;
+    }
+});
+</script>
+
+</body>
+</html>
