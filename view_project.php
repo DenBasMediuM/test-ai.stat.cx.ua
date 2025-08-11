@@ -89,14 +89,14 @@ set_time_limit(120);
     </div>
     
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-9">
             <div class="card shadow-sm mb-4">
                 <div class="card-header">
                     Результат
                 </div>
                 <div class="card-body">
                     <div id="project-content">
-                        <?php echo $project['content']; // Выводим содержимое как есть, без htmlspecialchars для корректного отображения HTML и изображений ?>
+                        <?php echo $project['content']; // Выводим содержимое как есть ?>
                     </div>
                 </div>
             </div>
@@ -113,22 +113,16 @@ set_time_limit(120);
             <?php endif; ?>
         </div>
         
-        <div class="col-lg-4">
+        <div class="col-lg-3">
             <div class="card shadow-sm">
-                <div class="card-header">
-                    Действия
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Действия</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="edit_project.php?id=<?php echo $project_id; ?>" class="btn btn-primary">
-                            <i class="bi bi-pencil"></i> Редактировать
-                        </a>
                         <button class="btn btn-danger" id="deleteProject">
                             <i class="bi bi-trash"></i> Удалить проект
                         </button>
-                        <a href="index.php?duplicate=<?php echo $project_id; ?>" class="btn btn-secondary">
-                            <i class="bi bi-files"></i> Дублировать
-                        </a>
                     </div>
                 </div>
             </div>
