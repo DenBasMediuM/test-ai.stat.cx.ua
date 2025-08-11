@@ -1,6 +1,3 @@
-<?php
-// index.php — форма с отправкой вопроса в n8n и выводом ответа
-?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -70,7 +67,74 @@ document.getElementById('aiForm').addEventListener('submit', async function(e) {
         }
 
         const result = await response.json();
-        answerDiv.innerHTML = result.output ? result.output : JSON.stringify(result);
+		console.log(result); 
+		
+        if (result.output) {
+            // Если это markdown-блок с json, парсим его
+            const match = result.output.match(/```json\s*([\s\S]*?)```/);
+            if (match) {
+				console.log(1111);
+                answerDiv.innerHTML = `<pre>${match[1]}</pre>`;
+
+				try {
+					console.log(2222);
+					const responseApi1 = await fetch("https://itsa777.app.n8n.cloud/webhook/654ca023-d8a1-47c7-ba21-c7d6d746ea51", {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ response: match[1] })
+					});
+
+					if (!responseApi1.ok) {
+						answerDiv.innerHTML = "Ошибка запроса responseApi1: " + responseApi1.status;
+						return;
+					}
+
+					const resultApi1 = await responseApi1.json();
+					
+					console.log(1111111111); 
+					console.log(resultApi1);
+					console.log(resultApi1.data); 
+
+					// Store the current HTML content
+					const currentContent = answerDiv.innerHTML;
+
+					console.log("Полученные данные:", resultApi1.data);
+					
+					// Проверяем и исправляем формат данных изображения
+					if (resultApi1.data) {
+						let imageData = resultApi1.data;
+						
+						// Удаляем символ "=" в начале строки, если он есть
+						if (imageData.startsWith('=')) {
+							imageData = imageData.substring(1);
+							console.log("Удален префикс =, новые данные:", imageData);
+						}
+						
+						// Проверяем, является ли это data URI изображения
+						if (typeof imageData === 'string' && imageData.startsWith('data:image')) {
+							// Добавляем изображение к существующему содержимому
+							answerDiv.innerHTML = currentContent + `<br><img src="${imageData}" alt="AI image" style="max-width:100%;">`;
+							console.log("Изображение добавлено в DOM, длина данных: " + imageData.length);
+						} else {
+							console.error("Данные изображения не в ожидаемом формате:", imageData);
+							answerDiv.innerHTML += "<br>Ошибка формата данных изображения";
+						}
+					} else {
+						console.error("Данные изображения отсутствуют в ответе:", resultApi1);
+					}
+
+				} catch (err) {
+					console.error("Error processing image:", err);
+					answerDiv.innerHTML += "<br>Ошибка при обработке изображения: " + err.message;
+				}
+            } else {
+                answerDiv.innerHTML = result.output;
+            }
+        } else {
+            answerDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+        }
 
     } catch (err) {
         answerDiv.innerHTML = "Ошибка: " + err.message;
