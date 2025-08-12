@@ -50,10 +50,12 @@ $username = $_SESSION['username'];
                     <button id="saveProject" class="btn btn-light btn-sm">Сохранить проект</button>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <input type="text" id="projectName" class="form-control" placeholder="Название проекта">
+                    <div id="answer" class="border rounded p-3 mb-4 bg-white">
+                        <div class="text-center text-muted">
+                            <div class="spinner-border text-primary me-2" role="status"></div>
+                            <span>Запрашиваем название проекта...</span>
+                        </div>
                     </div>
-                    <div id="answer" class="border rounded p-3 mb-4 bg-white">Напиши название проекта</div>
                     
                     <form id="aiForm">
                         <div class="mb-3">
@@ -78,10 +80,8 @@ $username = $_SESSION['username'];
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 
 <script>
-document.getElementById('aiForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const question = e.target.question.value;
+// Функция для запроса к API
+async function sendQuestion(question) {
     const answerDiv = document.getElementById('answer');
     answerDiv.innerHTML = `<div class="d-flex align-items-center">
                             <div class="spinner-border text-primary me-2" role="status"></div>
@@ -243,18 +243,51 @@ document.getElementById('aiForm').addEventListener('submit', async function(e) {
     } catch (err) {
         answerDiv.innerHTML = `<div class="alert alert-danger">Ошибка: ${err.message}</div>`;
     }
+}
+
+// Обработчик отправки формы пользователем
+document.getElementById('aiForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const question = e.target.question.value;
+    await sendQuestion(question);
+});
+
+// Автоматически запрашиваем название проекта при загрузке страницы
+document.addEventListener('DOMContentLoaded', async function() {
+    // Небольшая задержка для лучшего UX
+    setTimeout(async () => {
+        // Отправляем запрос для получения названия проекта
+        await sendQuestion('Введите название проекта');
+    }, 500);
 });
 
 // Добавляем функционал сохранения проекта
 document.getElementById('saveProject').addEventListener('click', async function() {
-    const projectName = document.getElementById('projectName').value.trim();
-    const content = document.getElementById('answer').innerHTML;
-    const question = document.querySelector('textarea[name="question"]').value;
+    // Запрашиваем название проекта у пользователя
+    let projectName = prompt('Введите название проекта:');
     
-    if (!projectName) {
-        alert('Пожалуйста, укажите название проекта');
+    // Проверяем, был ли отменен ввод или введена пустая строка
+    if (projectName === null) {
+        // Пользователь отменил ввод
         return;
     }
+    
+    // Удаляем лишние пробелы и проверяем, не пустое ли название
+    projectName = projectName.trim();
+    
+    if (projectName === '') {
+        // Если название пустое, используем текущую дату и время
+        const now = new Date();
+        projectName = 'Проект от ' + now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+    }
+    
+    // Если название слишком длинное, обрезаем его
+    if (projectName.length > 100) {
+        projectName = projectName.substring(0, 97) + '...';
+    }
+    
+    const content = document.getElementById('answer').innerHTML;
+    const question = document.querySelector('textarea[name="question"]').value;
     
     try {
         const response = await fetch('save_project.php', {
